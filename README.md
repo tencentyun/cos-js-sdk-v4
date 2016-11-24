@@ -1,5 +1,7 @@
 # tencentyun-cos-js-sdk-v4
-js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D)
+js-sdk-v4 for [腾讯云对象存储服务](https://www.qcloud.com/product/cos.html)
+
+当前版本 v4.0.0-beta
 
 ##前期准备
 
