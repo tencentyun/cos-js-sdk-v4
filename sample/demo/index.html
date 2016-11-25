@@ -18,11 +18,11 @@
 
             //TODO 以下几个值请确保填上再调用示例里的sdk方法
             //具体可以到https://console.qcloud.com/cos 进行查看
-            var appid = '';
             var bucket = '';
-            var region = '';
+            var appid = '';
             var sid = '';
             var skey = '';
+            var region = '';
             //TODO 以上几个值请确保填上再调用示例里的sdk方法
 
             var myFolder = '/111/';//需要操作的目录
@@ -191,6 +191,18 @@
                 cos.updateFile(successCallBack, errorCallBack, bucket, myFile, 'my new file attr');
             });
 
+            //拷贝文件，从源文件地址复制一份到新地址
+            $('#copyFile').on('click', function () {
+
+                var myFile = '111/2.txt';//填你自己实际存在的文件
+
+                //注意一下目标的路径，这里如果填333/2.txt 则表示文件复制到111/333/2.txt
+                //如果填/333/2.txt 则表示文件复制到bucket根目录下的333/2.txt
+                var newFile = '/333/2.txt';
+                var overWrite = 1;//0 表示不覆盖 1表示覆盖
+                cos.copyFile(successCallBack, errorCallBack, bucket, myFile, newFile, overWrite);
+            });
+
         });
     </script>
 </head>
@@ -224,6 +236,8 @@
         </div>
     </div>
     <div class="row" style="padding:20px;">
+        <div class="col-md-2"><a id="copyFile" href="javascript:void(0);" class="btn btn-lg btn-outline">copyFile</a>
+        </div>
         <div class="col-md-2"><a id="uploadFile" href="javascript:void(0);"
                                  class="btn btn-lg btn-outline">uploadFile</a></div>
         <div class="col-md-2"><a id="sliceUploadFile" href="javascript:void(0);" class="btn btn-lg btn-outline">sliceUploadFile</a>
