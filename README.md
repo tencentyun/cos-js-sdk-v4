@@ -1,13 +1,11 @@
 # tencentyun-cos-js-sdk-v4
-js-sdk-v4 for [腾讯云对象存储服务](https://www.qcloud.com/product/cos.html)
-
-当前版本 v4.0.0-beta
+js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D)
 
 ##前期准备
 
-1. 使用SDK需要浏览器支持HTML 5
-2. 请您到https://console.qcloud.com/cos 获取您的项目ID(appid)，bucket，secret_id和secret_key。
-3. 请您到https://console.qcloud.com/cos 针对您要操作的bucket进行跨域（CORS）设置
+1.使用SDK需要浏览器支持HTML 5<br>
+2.请您到https://console.qcloud.com/cos 获取您的项目ID(appid)，bucket，secret_id和secret_key。
+3.请您到https://console.qcloud.com/cos 针对您要操作的bucket进行跨域（CORS）设置
 
 
 ##配置
@@ -230,6 +228,24 @@ js-sdk-v4 for [腾讯云对象存储服务](https://www.qcloud.com/product/cos.h
 	$('#updateFile').on('click', function () {
 		var myFile = myFolder+'2.txt';//填你自己实际存在的文件
 		cos.updateFile(successCallBack, errorCallBack, bucket, myFile, 'my new file attr');
+	});
+
+```
+
+### 拷贝文件示例
+
+```js
+
+	//拷贝文件，从源文件地址复制一份到新地址
+	$('#copyFile').on('click', function () {
+
+		var myFile = '111/2.txt';//填你自己实际存在的文件
+
+		//注意一下目标的路径，这里如果填333/2.txt 则表示文件复制到111/333/2.txt
+		//如果填/333/2.txt 则表示文件复制到bucket根目录下的333/2.txt
+		var newFile = '/333/2.txt';
+		var overWrite = 1;//0 表示不覆盖 1表示覆盖
+		cos.copyFile(successCallBack, errorCallBack, bucket, myFile, newFile, overWrite);
 	});
 
 ```
