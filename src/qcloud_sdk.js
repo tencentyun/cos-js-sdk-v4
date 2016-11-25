@@ -236,6 +236,28 @@
 		});
 	};
 
+	CosCloud.prototype.copyFile = function (success, error, bucketName, remotePath, destPath, overWrite) {
+		var that = this;
+		this.getAppSign(function (sign) {
+			remotePath = fixPath(remotePath);
+			var url = that.getCgiUrl(remotePath, sign);
+			var formData = new FormData();
+			formData.append('op', 'copy');
+			formData.append('dest_fileid', destPath);
+			formData.append('to_over_write', overWrite);
+
+			$.ajax({
+				type: 'POST',
+				url: url,
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: success,
+				error: error
+			});
+		});
+	};
+
 	CosCloud.prototype.getFolderList = function (success, error, bucketName, remotePath, num, context, order, pattern, prefix) {
 		var that = this;
 
