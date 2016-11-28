@@ -1,6 +1,6 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-		typeof define === 'function' && define.amd ? define(factory) :
+		typeof define === 'function' && (define.amd || define.cmd) ? define(factory) :
 			global.CosCloud = factory();
 }(this, function () {
 	'use strict';
@@ -45,17 +45,12 @@
 	CosCloud.prototype.getSliceSize = function (size) {
 		var res = SLICE_SIZE_1M;
 
-
 		if (size <= SLICE_SIZE_512K) {
 			res = SLICE_SIZE_512K;
 		} else if (size <= SLICE_SIZE_1M) {
 			res = SLICE_SIZE_1M;
-		} else if (size <= SLICE_SIZE_2M) {
-			res = SLICE_SIZE_2M;
-		} else if (size <= SLICE_SIZE_3M) {
-			res = SLICE_SIZE_3M;
 		} else {
-			res = SLICE_SIZE_3M;
+			res = SLICE_SIZE_1M;
 		}
 
 
@@ -78,7 +73,6 @@
 			}
 		}
 	};
-
 
 	CosCloud.prototype.getCgiUrl = function (destPath, sign) {
 		var region = this.region;
@@ -394,7 +388,6 @@
 							message: 'get slice sha1 error'
 						});
 					});
-
 
 				} else if (data && data.access_url) {//之前已经上传完成
 					success(res);
