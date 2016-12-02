@@ -252,6 +252,28 @@
 		});
 	};
 
+	CosCloud.prototype.moveFile = function (success, error, bucketName, remotePath, destPath, overWrite) {
+		var that = this;
+		this.getAppSign(function (sign) {
+			remotePath = fixPath(remotePath);
+			var url = that.getCgiUrl(remotePath, sign);
+			var formData = new FormData();
+			formData.append('op', 'move');
+			formData.append('dest_fileid', destPath);
+			formData.append('to_over_write', overWrite);
+
+			$.ajax({
+				type: 'POST',
+				url: url,
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: success,
+				error: error
+			});
+		});
+	};
+
 	CosCloud.prototype.getFolderList = function (success, error, bucketName, remotePath, num, context, order, pattern, prefix) {
 		var that = this;
 
@@ -390,6 +412,9 @@
 					});
 
 				} else if (data && data.access_url) {//之前已经上传完成
+					if (typeof opt.onprogress == 'function') {
+						opt.onprogress(1);
+					}
 					success(res);
 				} else {//之前没上传，进行sliceInit开启上传
 					getSliceSHA1.call(that, opt).done(function (uploadparts) {
@@ -398,18 +423,29 @@
 						var len = uploadparts.length;
 						opt.sha = uploadparts[len - 1].datasha;
 
-						sliceInit.call(that, opt).done(function () {
+						sliceInit.call(that, opt).done(function (res) {
 
-							sliceFinish.call(that, opt).done(function (r) {
+							res = res || {};
+							var data = res.data || {};
 
-								success(r);
+							if (data && data.access_url) {//之前已经上传完成
+								if (typeof opt.onprogress == 'function') {
+									opt.onprogress(1);
+								}
+								success(res);
+							} else {
+								sliceFinish.call(that, opt).done(function (r) {
 
-							}).fail(function (d) {
-								error({
-									code: -1,
-									message: d.message || 'slice finish error'
+									success(r);
+
+								}).fail(function (d) {
+									error({
+										code: -1,
+										message: d.message || 'slice finish error'
+									});
 								});
-							});
+							}
+
 
 						}).fail(function (d) {
 							d = d || {};
