@@ -250,6 +250,26 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 
 ```
 
+### 移动文件示例
+
+```js
+
+	//移动文件，把源文件移动到新地址，如果是同一个目录移动且文件名不同的话，相当于改了一个文件名
+	//如果是移动到新目录，相当于剪切当前的文件，粘贴到了新目录
+	$('#moveFile').on('click', function () {
+
+		var myFile = '/111/2.txt';//填你自己实际存在的文件
+
+		//注意一下目标的路径，这里如果填333/2.txt 则表示文件移动到111/333/2.txt
+		//如果填/333/2.txt 则表示文件移动到bucket根目录下的333/2.txt
+		//如果填/111/3.txt 则相当于把2.txt改名成3.txt
+		var newFile = '/333/2.txt';
+		var overWrite = 1;//0 表示不覆盖 1表示覆盖
+		cos.moveFile(successCallBack, errorCallBack, bucket, myFile, newFile, overWrite);
+	});
+
+```
+
 ##反馈
 
 欢迎提issue
