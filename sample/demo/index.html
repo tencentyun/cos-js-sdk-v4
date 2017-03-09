@@ -117,6 +117,7 @@
                 $('#js-file').off('change').on('change', function (e) {
                     var file = e.target.files[0];
                     cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 1);//insertOnly==0 表示允许覆盖文件 1表示不允许
+                    $('#form')[0].reset();
                     return false;
                 });
 
@@ -233,7 +234,9 @@
     </div>
 </div>
 <div class="container bs-docs-container">
-    <input id="js-file" type="file" style="display:none;"/>
+    <form id="form">
+        <input id="js-file" type="file" style="display:none;"/>
+    </form>
 
     <div class="row" style="padding:20px;">
         <div class="col-md-2"><a id="updateFolder" href="javascript:void(0);" class="btn btn-lg btn-outline">updateFolder</a>

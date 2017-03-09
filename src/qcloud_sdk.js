@@ -11,13 +11,21 @@
 		this.appid = opt.appid;
 		this.bucket = opt.bucket;
 		this.region = opt.region;
-		if (opt.getAppSign) {
-			this.getAppSign = opt.getAppSign;
-		}
-		if (opt.getAppSignOnce) {
-			this.getAppSignOnce = opt.getAppSignOnce;
-		}
+        if (opt.getAppSign) {
+            this.getAppSign = getEncodeFn(opt.getAppSign);
+        }
+        if (opt.getAppSignOnce) {
+            this.getAppSignOnce = getEncodeFn(opt.getAppSignOnce);
+        }
 	}
+
+    function getEncodeFn(fn) {
+        return function (callback) {
+            fn(function (s) {
+                callback(decodeURIComponent(s) === s ? encodeURIComponent(s) : s);
+            });
+        };
+    }
 
 	//512K
 	var SLICE_SIZE_512K = 524288;
