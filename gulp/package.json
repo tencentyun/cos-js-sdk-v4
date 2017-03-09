@@ -1,7 +1,8 @@
 {
   "name": "cos-js-sdk-v4",
   "version": "1.0.0",
-  "description": "",
+  "description": "cos-js-sdk-v4",
+  "repository": "https://github.com/tencentyun/cos-js-sdk-v4.git",
   "devDependencies": {
     "gulp": "^3.8.11",
     "gulp-concat": "^2.5.2",
