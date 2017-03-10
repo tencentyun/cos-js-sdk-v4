@@ -22,7 +22,11 @@
     function getEncodeFn(fn) {
         return function (callback) {
             fn(function (s) {
-                callback(decodeURIComponent(s) === s ? encodeURIComponent(s) : s);
+                if (decodeURIComponent(s) === s && encodeURIComponent(s) !== s) {
+					console.error('Signature need url encode.');
+				} else {
+                    callback(s);
+				}
             });
         };
     }

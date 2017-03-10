@@ -36,16 +36,18 @@
                 region: region,//地域信息 必填参数 华南地区填gz 华东填sh 华北填tj
                 getAppSign: function (callback) {//获取签名 必填参数
 
-                    //下面简单讲一下获取签名的几种办法
+
+                    //下面简单讲一下获取签名的几种办法，签名请做一次 url encode
                     //1.搭建一个鉴权服务器，自己构造请求参数获取签名，推荐实际线上业务使用，优点是安全性好，不会暴露自己的私钥
                     /**
                      $.ajax('SIGN_URL').done(function (data) {
                         var sig = data.sign;
-                        callback(sig);
+                        callback(encodeURIComponent(sig));
                     });
                      **/
-                    //2.直接在浏览器前端计算签名，需要获取自己的accessKey和secretKey, 一般在调试阶段使用
 
+
+                    //2.直接在浏览器前端计算签名，需要获取自己的accessKey和secretKey, 一般在调试阶段使用
                     var self = this;
                     var random = parseInt(Math.random() * Math.pow(2, 32));
                     var now = parseInt(new Date().getTime() / 1000);
@@ -59,18 +61,14 @@
                     var resWordArray = sha1Res.concat(strWordArray);
                     var res = resWordArray.toString(CryptoJS.enc.Base64);
 
-                    res = encodeURIComponent(res);
-
                     setTimeout(function () {//setTimeout模拟一下网络延迟的情况
-                        callback(res);
+                        callback(encodeURIComponent(res));
                     }, 1000);
 
 
-                    //
-
                     //3.直接复用别人算好的签名字符串, 一般在调试阶段使用
-                    //callback('YOUR_SIGN_STR')
-                    //
+                    //callback(encodeURIComponent('YOUR_SIGN_STR'))
+
 
                 },
                 getAppSignOnce: function (callback) {//单次签名，参考上面的注释即可
