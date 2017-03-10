@@ -85,10 +85,8 @@
                     var resWordArray = sha1Res.concat(strWordArray);
                     var res = resWordArray.toString(CryptoJS.enc.Base64);
 
-                    res = encodeURIComponent(res);
-
                     setTimeout(function () {//setTimeout模拟一下网络延迟的情况
-                        callback(res);
+                        callback(encodeURIComponent(res));
                     }, 1000);
                 }
             });
