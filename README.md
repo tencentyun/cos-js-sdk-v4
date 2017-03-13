@@ -68,7 +68,7 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 		},
 		getAppSignOnce: function (callback) {//单次签名，必填参数，参考上面的注释即可
 			//填上获取单次签名的逻辑
-            callback(encodeURIComponent('YOUR_SIGN_STR'))
+			// callback(encodeURIComponent('YOUR_SIGN_STR'))
 		}
 	});
 
