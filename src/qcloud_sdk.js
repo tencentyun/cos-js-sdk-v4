@@ -12,16 +12,16 @@
 		this.bucket = opt.bucket;
 		this.region = opt.region;
         if (opt.getAppSign) {
-            this.getAppSign = getEncodeFn(opt.getAppSign);
+            this.getAppSign = getEncodeFn(opt.getAppSign, this);
         }
         if (opt.getAppSignOnce) {
-            this.getAppSignOnce = getEncodeFn(opt.getAppSignOnce);
+            this.getAppSignOnce = getEncodeFn(opt.getAppSignOnce, this);
         }
 	}
 
-    function getEncodeFn(fn) {
+    function getEncodeFn(fn, context) {
         return function (callback) {
-            fn(function (s) {
+            fn.call(context, function (s) {
                 if (decodeURIComponent(s) === s && encodeURIComponent(s) !== s) {
 					console.error('Signature need url encode.');
 				} else {
