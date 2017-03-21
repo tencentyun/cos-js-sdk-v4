@@ -23,7 +23,7 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 ### cos-js-sdk之v4与v3相比的一些改动
 
 1. v3没有地域信息，v4初始化的逻辑，必须指定地域信息，华南地区填gz 华东填sh 华北填tj
-2. v3的auth.php耦合度太高，sha1值使用了flash计算，v4把鉴权的逻辑分离，可以自己实现getAppSign和getAppSignOnce， v4提供了完整的，浏览器端实现签名的示例
+2. v3的auth.php耦合度太高，sha1值使用了flash计算，v4把鉴权的逻辑分离，可以自己实现getAppSign和getAppSignOnce， v4提供了完整的，浏览器端实现签名的示例，注意传给 SDK 的签名要做一次 url 编码
 3. v3分了普通上传和分片上传接口，v4上传直接调用一个接口即可，大文件会自动调用分片逻辑（当然也可以手动调用分片上传）
 4. v4新增了进度回调onprogress
 5. v4进行了模块化封装，可以自行用gulp构建
@@ -68,7 +68,7 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 		},
 		getAppSignOnce: function (callback) {//单次签名，必填参数，参考上面的注释即可
 			//填上获取单次签名的逻辑
-            callback(encodeURIComponent('YOUR_SIGN_STR'))
+			// callback(encodeURIComponent('YOUR_SIGN_STR'))
 		}
 	});
 
