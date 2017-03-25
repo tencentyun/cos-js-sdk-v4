@@ -42,7 +42,7 @@
                     /**
                      $.ajax('SIGN_URL').done(function (data) {
                         var sig = data.sign;
-                        callback(encodeURIComponent(sig));
+                        callback(sig);
                     });
                      **/
 
@@ -62,12 +62,12 @@
                     var res = resWordArray.toString(CryptoJS.enc.Base64);
 
                     setTimeout(function () {//setTimeout模拟一下网络延迟的情况
-                        callback(encodeURIComponent(res));
+                        callback(res);
                     }, 1000);
 
 
                     //3.直接复用别人算好的签名字符串, 一般在调试阶段使用
-                    //callback(encodeURIComponent('YOUR_SIGN_STR'))
+                    //callback('YOUR_SIGN_STR')
 
 
                 },
@@ -86,7 +86,7 @@
                     var res = resWordArray.toString(CryptoJS.enc.Base64);
 
                     setTimeout(function () {//setTimeout模拟一下网络延迟的情况
-                        callback(encodeURIComponent(res));
+                        callback(res);
                     }, 1000);
                 }
             });

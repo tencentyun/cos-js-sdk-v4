@@ -50,25 +50,25 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 			/**
 			 $.ajax('SIGN_URL').done(function (data) {
 				var sig = data.sign;
-				callback(encodeURIComponent(sig));
+				callback(sig);
 			});
 			 **/
 
 			//2.直接在浏览器前端计算签名，需要获取自己的accessKey和secretKey, 一般在调试阶段使用
 			//拿到签名之后记得调用callback
 			//var res = getAuth(); //这个函数自己根据签名算法实现
-			//callback(encodeURIComponent(res));
+			//callback(res);
 
 
 			//3.直接复用别人算好的签名字符串, 一般在调试阶段使用
 			//拿到签名之后记得调用callback
-			//callback(encodeURIComponent('YOUR_SIGN_STR'))
+			//callback('YOUR_SIGN_STR')
 			//
 
 		},
 		getAppSignOnce: function (callback) {//单次签名，必填参数，参考上面的注释即可
 			//填上获取单次签名的逻辑
-			// callback(encodeURIComponent('YOUR_SIGN_STR'))
+			// callback('YOUR_SIGN_STR')
 		}
 	});
 
