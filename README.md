@@ -5,7 +5,9 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 
 1. 使用SDK需要浏览器支持HTML 5<br>
 2. 请您到https://console.qcloud.com/cos 获取您的项目ID(appid)，bucket，secret_id和secret_key。
-3. 请您到https://console.qcloud.com/cos 针对您要操作的bucket进行跨域（CORS）设置
+3. 请您到https://console.qcloud.com/cos 针对您要操作的bucket进行跨域（CORS）设置，可以按照如下范例，修改来源 Origin：
+
+    ![./cors.png](./cors.png)
 
 
 ##配置
