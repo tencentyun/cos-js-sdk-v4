@@ -1,7 +1,7 @@
 # tencentyun-cos-js-sdk-v4
 js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D)
 
-##前期准备
+## 前期准备
 
 1. 使用SDK需要浏览器支持HTML 5<br>
 2. 请您到https://console.qcloud.com/cos 获取您的项目ID(appid)，bucket，secret_id和secret_key。
@@ -10,7 +10,7 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
     ![./cors.png](./cors.png)
 
 
-##配置
+## 配置
 
 ### Step1. 下载源码
 从github下载源码，将SDK中dist目录下的cos-js-sdk-v4.js包含到您的项目中。
@@ -20,7 +20,7 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 
 &lt;script type="text/javascript" src="cos-js-sdk-v4.js"&gt;&lt;/script&gt;<br>
 
-##使用
+## 使用
 
 ### cos-js-sdk之v4与v3相比的一些改动
 
@@ -31,9 +31,9 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 5. v4进行了模块化封装，可以自行用gulp构建
 6. 如何确定自己应该是用v4的sdk还是v3的？ 登陆https://console.qcloud.com/cos 如果左上角提示是云对象存储v4则说明要用v4的sdk否则就是v3的
 
-###所有的示例代码实现可以参考sample/index.html
+### 所有的示例代码实现可以参考sample/index.html
 
-###初始化
+### 初始化
 
 ```js
 
@@ -273,6 +273,6 @@ js-sdk-v4 for [腾讯云对象存储服务](http://wiki.qcloud.com/wiki/COS%E4%B
 
 ```
 
-##反馈
+## 反馈
 
 欢迎提issue
