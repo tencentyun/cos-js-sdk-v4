@@ -1,0 +1,20 @@
+{
+  "name": "cos-js-sdk-v4",
+  "version": "1.0.0",
+  "description": "js-sdk-v4 for 腾讯云对象存储服务",
+  "main": "dist/cos-js-sdk-v4.js",
+  "scripts": {
+    "dev": "cd gulp && gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tencentyun/cos-js-sdk-v4.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tencentyun/cos-js-sdk-v4/issues"
+  },
+  "homepage": "https://github.com/tencentyun/cos-js-sdk-v4#readme"
+}
