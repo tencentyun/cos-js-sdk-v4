@@ -11,6 +11,13 @@
 		this.appid = opt.appid;
 		this.bucket = opt.bucket;
 		this.region = opt.region;
+
+		this.sha1CacheExpired = 3 * 24 * 3600;
+		this.uploadMaxThread = 5;
+		this.uploadMaxRetryTimes = 3;
+
+        this._uploadingThreadCount = 0;
+
         if (opt.getAppSign) {
             this.getAppSign = getEncodeFn(opt.getAppSign, this);
         }
@@ -366,7 +373,6 @@
 		that.getAppSign(function (sign) {
 			var opt = {};
 			optSliceSize = that.getSliceSize(optSliceSize);
-			opt.onprogress = onprogress;
 			opt.bucket = bucketName;
 			opt.path = remotePath;
 			opt.file = file;
@@ -375,20 +381,29 @@
 			opt.appid = that.appid;
 			opt.sign = sign;
 			opt.biz_attr = bizAttr || '';
-
+            opt.onprogress = function (uploaded, sha1Check) {
+                if (sha1Check === undefined) sha1Check = 1;
+                onprogress(uploaded, sha1Check);
+            };
 
 			//先查看是否有上传过分片
 			sliceList.call(that, opt).always(function (res) {
 				res = res || {};
 				var data = res.data;
 				if (data && data.session) {//之前上传过，直接开始上传剩下的分片
-					opt.session = data.session;
+                    if (data.filesize !== opt.file.size) {
+                        return error({code: -1, message: 'filesize not match'});
+                    }
 
-					var listparts = opt.listparts;
+                    var listparts = opt.listparts || [];
+					opt.session = data.session;
+                    opt.listparts = listparts;
 					if (listparts && listparts.length) {
-						opt.listparts = listparts;
 						var len = listparts.length;
 						opt.offset = listparts[len - 1].offset;
+					}
+					if (data.sha) {
+                        opt.onlineSha = data.sha.split('_')[0];
 					}
 					getSliceSHA1.call(that, opt).done(function (uploadparts) {
 
@@ -397,33 +412,21 @@
 						opt.sha = uploadparts[len - 1].datasha;
 
 						sliceUpload.call(that, opt).done(function () {
-
 							sliceFinish.call(that, opt).done(function (r) {
-
 								success(r);
-
 							}).fail(function (d) {
-								error({
-									code: -1,
-									message: d.message || 'slice finish error'
-								});
-							});
-
+                                error({code: -1, message: d && d.message || 'slice finish error'});
+                            });
 						}).fail(function (d) {
-							error({
-								code: -1,
-								message: d.message || 'slice upload file error'
-							});
-						});
-					}).fail(function () {
-						error({
-							code: -1,
-							message: 'get slice sha1 error'
-						});
-					});
+							error({code: -1, message: (d && d.message) || 'slice upload file error'});
+                        });
+
+					}).fail(function (errMsg) {
+						error({code: -1, message: errMsg || 'get slice sha1 error'});
+                    });
 
 				} else if (data && data.access_url) {//之前已经上传完成
-					if (typeof opt.onprogress == 'function') {
+					if (typeof opt.onprogress === 'function') {
 						opt.onprogress(1);
 					}
 					success(res);
@@ -439,16 +442,14 @@
 							res = res || {};
 							var data = res.data || {};
 
-							if (data && data.access_url) {//之前已经上传完成
-								if (typeof opt.onprogress == 'function') {
+							if (data && data.access_url) { // 之前已经上传完成
+								if (typeof opt.onprogress === 'function') {
 									opt.onprogress(1);
 								}
 								success(res);
 							} else {
 								sliceFinish.call(that, opt).done(function (r) {
-
 									success(r);
-
 								}).fail(function (d) {
 									error({
 										code: -1,
@@ -456,7 +457,6 @@
 									});
 								});
 							}
-
 
 						}).fail(function (d) {
 							d = d || {};
@@ -474,9 +474,7 @@
 				}
 			});
 
-
 		});
-
 
 	};
 
@@ -501,64 +499,93 @@
 		return path;
 	}
 
+    var REM_SHA1_KEY = '_cos_sdk_sha1_';
+    var rememberSha1 = function (session, sha1Samples, sha1CacheExpired) {
+        try {
+            var data = JSON.parse(localStorage.getItem(REM_SHA1_KEY)) || {};
+        } catch (e) {
+        }
+        var current = Date.now();
+        sha1Samples['update_time'] = current;
+        data[session] = sha1Samples;
+        // 删除太旧的数据
+        for (var i = localStorage.length - 1; i >= 0; i--) {
+            var key = localStorage.key(i);
+			var item = localStorage.getItem(key);
+			if (current - item['update_time'] > sha1CacheExpired) {
+				localStorage.removeItem(key)
+			}
+		}
+        localStorage.setItem(REM_SHA1_KEY, JSON.stringify(data));
+    };
+    var restoreSha1 = function (session) {
+        try {
+            var data = JSON.parse(localStorage.getItem(REM_SHA1_KEY)) || {};
+        } catch (e) {
+        }
+        return data[session];
+    };
+
 	//获取分片sha1值数组
 	function getSliceSHA1(opt) {
 		var defer = $.Deferred();
 
-		var sha1Algo = new window.jsSHA('SHA-1', 'BYTES');
+        var sha1Algo = new window.jsSHA('SHA-1', 'BYTES');
 		var read = 0;
 		var unit = opt.sliceSize;
 		var reader = new FileReader();
-		var uploadparts = [];
+		var uploadParts = [];
 		var file = opt.file;
+		var fileSize = file.size;
+
+        // 获取已存在的 session sha1 抽样
+		var sha1Samples;
+        if (opt.session) {
+            sha1Samples = restoreSha1(opt.session);
+        }
+
+        var pushPartAndCheck = function (part) {
+            uploadParts.push(part);
+            // 判读是否和已存在的文件不一致，如果不一致马上结束计算
+            var sha1Index = part.offset + '-' + part.datalen;
+            if (sha1Samples && sha1Samples[sha1Index]) {
+                if (part.datasha !== sha1Samples[sha1Index]) {
+                    return false;
+                }
+            }
+            return true;
+        };
 
 		//为了避免内存可能过大，尝试分块读取文件并计算
-		reader.readAsBinaryString(file.slice(read, read + unit));
 		reader.onload = function (e) {
+			if (!file || file.length < 1) return;
 
-			if (file == null || file.length < 1) {
-				return;
+			// 计算当次分块的 sha1 值
+			var middle = sha1Algo.update(this.content || this.result);
+
+			// 获取当前分块的长度
+			var len = read + unit > fileSize ? fileSize - read : unit;
+			var notEnd = read + len < fileSize;
+			var sha1 = notEnd ? middle : sha1Algo.getHash('HEX'); // 最后一块特殊处理
+
+			// 保存每次计算得到的 sha1
+            if (!pushPartAndCheck({offset: read, datalen: len, datasha: sha1})) {
+                defer.reject('sha1 not match');
+                return;
 			}
 
-			var middle = sha1Algo.update(e.target.result);
+            // 更新已完成百分比
+            read = read + len;
+            opt.onprogress(0, read / fileSize);
 
-			var len = unit;
-			if (len + read >= file.size) {
-				len = file.size - read;
+            // 循环读文件，到最后一块处理完之后，回调所有分片数据
+            if (notEnd) {
+                readAsBinStr.call(reader, file.slice(read, Math.min(read + unit, fileSize)));
 			} else {
-				uploadparts.push({
-					offset: read,
-					datalen: len,
-					datasha: middle
-				});
+                defer.resolve(uploadParts);
 			}
-
-			read += unit;
-			if (read < file.size) {
-
-				var end = read + unit;
-				if (end > file.size) {
-					end = file.size;
-				}
-				//循环读文件
-				reader.readAsBinaryString(file.slice(read, end));
-
-			} else {
-				//读完了计算全文sha1
-				var sha1 = sha1Algo.getHash('HEX');
-
-				uploadparts.push({
-					offset: read - unit,
-					datalen: len,
-					datasha: sha1
-				});
-
-				defer.resolve(uploadparts);
-
-			}
-
-
 		};
+        readAsBinStr.call(reader, file.slice(read, read + unit));
 
 		reader.onerror = function () {
 			defer.reject();
@@ -609,17 +636,25 @@
 					opt.slice_size = sliceSize;
 					opt.offset = offset;
 
-
 					sliceUpload.call(that, opt).done(function (r) {
 						defer.resolve(r);
 					}).fail(function (r) {
 						defer.reject(r);
 					});
 
+                    // 保存正在上传的 session 文件分片 sha1，用于下一次续传优化判断是否不一样的文件
+					var sItem, sha1Samples = {};
+                    for (var i = 1; i < opt.uploadparts.length; i *= 2) {
+                        sItem = opt.uploadparts[i - 1];
+                        sha1Samples[sItem.offset + '-' + sItem.datalen] = sItem.datasha;
+                    }
+                    sItem = opt.uploadparts[opt.uploadparts.length - 1];
+                    sha1Samples[sItem.offset + '-' + sItem.datalen] = sItem.datasha;
+                    rememberSha1(opt.session, sha1Samples, that.sha1CacheExpired);
+
 				} else {
 					defer.reject(res);
 				}
-
 			},
 			error: function () {
 				defer.reject();
@@ -632,90 +667,194 @@
 	}
 
 
-	//分片上传正式接口
-	function sliceUpload(opt) {
+    // 上传单个分片，分片失败重传 3 次
+    var uploadSingleChunk = function (task, chunk, callback) {
 		var that = this;
+        var formData = new FormData();
+        var opt = task.opt;
+        var file = opt.file;
+        var slice_size = opt.slice_size;
+        var session = opt.session;
+        var totalSize = file.size;
+        var offsetStart = chunk.start;
+        var offsetEnd = Math.min(offsetStart + slice_size, totalSize);
+        var blob = that.slice.call(file, offsetStart, offsetEnd);
+
+        var removeXhr = function (xhr) {
+            for (var i = task.uploadingAjax.length - 1; i >= 0; i--) {
+                if (xhr === task.uploadingAjax[i]) {
+                    task.uploadingAjax.splice(i, 1);
+                }
+            }
+        };
+        var uploadChunk = function (cb) {
+            formData.append('sliceSize', slice_size);
+            formData.append('op', 'upload_slice_data');
+            formData.append('session', session);
+            formData.append('offset', offsetStart);
+            opt.sha && formData.append('sha', opt.sha);
+            formData.append('fileContent', blob);
+
+            that.getAppSign(function (sign) {
+                opt.sign = sign;
+                var url = that.getCgiUrl(opt.path, opt.sign);
+
+                var ajax = $.ajax({
+                    type: 'POST',
+                    dataType: "JSON",
+                    url: url,
+                    data: formData,
+                    xhr: function () {
+                        var xhr = $.ajaxSettings.xhr();
+                        xhr.upload.onprogress = function (evt) {
+                            chunk.loaded = evt.loaded;
+                            task.onTaskProgress && task.onTaskProgress();
+                        };
+                        return xhr;
+                    },
+                    success: function (res) {
+                        res = res || {};
+                        if (res.code === 0) {
+                            cb(null, res);
+                        } else {
+                            cb('error', res);
+                        }
+                    },
+                    error: function () {
+                        cb('error');
+                    },
+                    complete: function () {
+                        removeXhr(ajax);
+                    },
+                    processData: false,
+                    contentType: false
+                });
+                task.uploadingAjax.push(ajax);
+            });
+		};
+
+        // 失败重试 3 次
+        var tryUpload = function (times) {
+            uploadChunk(function (err, data) {
+                if (err) { // fail, retry
+                    if (times >= that.uploadMaxRetryTimes || task.uploadError) {
+                        callback(err, data);
+                    } else {
+                        tryUpload(times + 1);
+					}
+                } else { // success
+                    callback(err, data);
+                }
+            });
+        };
+        tryUpload(1);
+
+    };
+
+
+	// 分片上传单个文件
+	function sliceUpload(opt) {
+
+		var that = this;
+        var file = opt.file;
 		var defer = $.Deferred();
 
+        // 整理参数
+		var progressTimer;
+        var task = {
+            opt: opt,
+            uploadingAjax: [],
+			uploadingCount: 0,
+			currentIndex: 0,
+            chunkCount: Math.ceil(file.size / opt.slice_size),
+            chunks: [],
+            loadedSize: 0,
+            uploadError: false,
+            onTaskProgress: function (immediately) {
+            	var progress = function () {
+                    progressTimer = 0;
+                    var loaded = 0;
+                    for (var i = 0; i < task.chunks.length; i++) {
+                        var chunk = task.chunks[i];
+                        loaded += chunk.loaded;
+                    }
+                    opt.onprogress && opt.onprogress(loaded / file.size, 1);
+                };
+            	if (immediately) {
+            		clearTimeout(progressTimer);
+                    progress();
+				} else {
+                    if (progressTimer) return;
+                    progressTimer = setTimeout(progress, 100);
+				}
+            }
+        };
 
-		var formData = new FormData();
-		var file = opt.file;
+        // 整理所有分片数据
+		(function (){
+            var i, offset, partMap = {};
+            if (opt.listparts) {
+                for (i = 0; i < opt.listparts.length; i++) {
+                    partMap[opt.listparts[i].offset] = opt.listparts[i];
+                }
+			}
+            for (i = 0; i < task.chunkCount; i++) {
+            	offset = i * opt.slice_size;
+            	var chunk = {
+                    start: offset,
+                    end: Math.min(offset + opt.slice_size, file.size)
+                };
+                chunk.state = partMap[offset] ? 'online' : 'waiting';
+                chunk.loaded = partMap[offset] ? chunk.end - chunk.start : 0;
+                task.chunks.push(chunk);
+            }
+		})();
 
-		var offset = opt.offset || 0;
-		var slice_size = opt.slice_size;
-		var session = opt.session;
-		var totalSize = file.size;
+        // 所有分片上传完成，发起回调
+        var uploadSuccess = function () {
+            task.onTaskProgress(true);
+            defer.resolve();
+        };
 
-		var targetOffset = offset + slice_size;
+        // 出错的时候，结束所有上传，发起回调
+        var uploadError = function (error, res) {
+            task.uploadError = 'error';
+            for (var i = task.uploadingAjax.length - 1; i >= 0; i--) {
+            	var ajax = task.uploadingAjax[i];
+                ajax && ajax.abort();
+            }
+            task.onTaskProgress(true);
+            defer.reject(res);
+        };
 
-		formData.append('sliceSize', slice_size);
-		formData.append('op', 'upload_slice_data');
-		formData.append('session', session);
-		formData.append('offset', offset);
-		if (opt.sha) {
-			formData.append('sha', opt.sha);
-		}
-		formData.append('fileContent', that.slice.call(file, offset, targetOffset));
-
-		that.getAppSign(function (sign) {
-			opt.sign = sign;
-			var url = that.getCgiUrl(opt.path, opt.sign);
-
-			$.ajax({
-				type: 'POST',
-				dataType: "JSON",
-				url: url,
-				data: formData,
-				xhr: function () {
-
-					var xhr = $.ajaxSettings.xhr();
-					xhr.upload.onprogress = function (evt) {
-						var percent = (offset + evt.loaded) / file.size;
-						if (percent > 1) {
-							percent = 1;
-						}
-						if (typeof opt.onprogress == 'function') {
-							opt.onprogress(percent);
-						}
-					};
-
-					return xhr;
-
-				},
-				success: function (res) {
-					res = res || {};
-					if (res.code == 0) {
-
-						var offset = res.data.offset + slice_size;
-
-						if (offset < totalSize) {
-							opt.offset = offset;
-							sliceUpload.call(that, opt).done(function (r) {
-								defer.resolve(r);
-							}).fail(function () {
-								defer.reject();
-							});
+        // 开始上传并发上传，同一个上传实例里共用线程数限制
+		var uploadNextChunk = function () {
+            for (; that._uploadingThreadCount < that.uploadMaxThread && task.currentIndex < task.chunkCount; task.currentIndex++) {
+				var chunk = task.chunks[task.currentIndex];
+				if (chunk.state !== 'waiting') continue;
+				(function (chunk) {
+					chunk.state = 'uploading';
+                    task.uploadingCount++;
+                    that._uploadingThreadCount++;
+					uploadSingleChunk.call(that, task, chunk, function (error, data) {
+						task.uploadingCount--;
+						that._uploadingThreadCount--;
+						if (error) { // 错误马上结束
+							chunk.state = 'error';
+							uploadError(error, data);
 						} else {
-							if (typeof opt.onprogress == 'function') {
-								opt.onprogress(1);
+							chunk.state = 'success';
+							if (task.uploadingCount <= 0 && task.currentIndex >= task.chunkCount) { // 全部完成
+								uploadSuccess();
+							} else { // 未完成，处理执行下一个分片
+                                uploadNextChunk();
 							}
-							defer.resolve(res);
 						}
-
-
-					} else {
-						defer.reject(res);
-					}
-
-				},
-				error: function () {
-					defer.reject();
-				},
-				processData: false,
-				contentType: false
-			});
-		});
-
+					});
+				})(chunk);
+			}
+		};
+        uploadNextChunk();
 
 		return defer.promise();
 	}
@@ -746,7 +885,6 @@
 						opt.session = res.data.session;
 						opt.slice_size = res.data.slice_size;
 						var listparts = res.data.listparts || [];
-
 						opt.listparts = listparts;
 						var len = listparts.length;
 						if (len) {
@@ -825,6 +963,33 @@
 
 
 		return defer.promise();
+	}
+
+	function readAsBinStr(fileData) {
+		var readFun;
+		if (FileReader.prototype.readAsBinaryString) {
+            readFun = FileReader.prototype.readAsBinaryString;
+		} else if (FileReader.prototype.readAsArrayBuffer) { // 在 ie11 添加 readAsBinaryString 兼容
+			readFun = function (fileData) {
+                var binary = "";
+                var pt = this;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var bytes = new Uint8Array(reader.result);
+                    var length = bytes.byteLength;
+                    for (var i = 0; i < length; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    //pt.result  - readonly so assign binary
+                    pt.content = binary;
+                    pt.onload();
+                };
+                reader.readAsArrayBuffer(fileData);
+            };
+		} else {
+			console.error('FileReader not support readAsBinaryString');
+		}
+        readFun.call(this, fileData);
 	}
 
 
