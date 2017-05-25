@@ -10,9 +10,7 @@ gulp.task('dev', ['build'], function () {
 
 gulp.task('build', function () {
     gulp.src(['./src/*.js'])
-        .pipe(uglify({
-            preserveComments:'license'
-        }))
+        .pipe(uglify({}))
         .pipe(plugins.concat('cos-js-sdk-v4.js'))
         .pipe(gulp.dest('./dist').on('finish', function () {
             console.log('concat done...');
