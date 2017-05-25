@@ -10,11 +10,17 @@
     "type": "git",
     "url": "git+https://github.com/tencentyun/cos-js-sdk-v4.git"
   },
-  "keywords": ["qcloud", "qcloud-sdk", "cos", "cos-sdk"],
+  "keywords": [
+    "qcloud",
+    "qcloud-sdk",
+    "cos",
+    "cos-sdk"
+  ],
   "license": "ISC",
   "dependencies": {
     "gulp": "^3.8.11",
     "gulp-concat": "^2.5.2",
+    "gulp-header": "^1.8.8",
     "gulp-load-plugins": "^0.10.0",
     "gulp-uglify": "^1.5.4"
   },
