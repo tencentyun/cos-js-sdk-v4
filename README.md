@@ -1,4 +1,4 @@
-# tencentyun-cos-js-sdk-v4
+# cos-js-sdk-v4
 
 腾讯云 COS JS SDK（[JSON API](https://www.qcloud.com/document/product/436/6052)）
 
@@ -33,6 +33,12 @@
 4. v4新增了进度回调onprogress
 5. v4进行了模块化封装，可以自行用gulp构建
 6. 如何确定自己应该是用v4的sdk还是v3的？ 登陆https://console.qcloud.com/cos 如果左上角提示是云对象存储v4则说明要用v4的sdk否则就是v3的
+
+### 可以通过 npm 引入打包依赖
+
+```
+npm i cos-js-sdk-v4 --save-dev
+```
 
 ### 所有的示例代码实现可以参考sample/index.html
 
