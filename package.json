@@ -4,15 +4,26 @@
   "description": "js-sdk-v4 for 腾讯云对象存储服务",
   "main": "dist/cos-js-sdk-v4.js",
   "scripts": {
-    "dev": "cd gulp && gulp"
+    "dev": "gulp"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tencentyun/cos-js-sdk-v4.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "qcloud",
+    "qcloud-sdk",
+    "cos",
+    "cos-sdk"
+  ],
   "license": "ISC",
+  "dependencies": {
+    "gulp": "^3.8.11",
+    "gulp-concat": "^2.5.2",
+    "gulp-header": "^1.8.8",
+    "gulp-load-plugins": "^0.10.0",
+    "gulp-uglify": "^1.5.4"
+  },
   "bugs": {
     "url": "https://github.com/tencentyun/cos-js-sdk-v4/issues"
   },
