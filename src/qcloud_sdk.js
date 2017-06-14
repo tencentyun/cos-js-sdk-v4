@@ -17,6 +17,7 @@
 		this.uploadMaxRetryTimes = 3;
 
         this._uploadingThreadCount = 0;
+        this.tasks = [];
 
         if (opt.getAppSign) {
             this.getAppSign = getEncodeFn(opt.getAppSign, this);
@@ -326,13 +327,27 @@
 		});
 	};
 
-	CosCloud.prototype.uploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly) {
+	CosCloud.prototype.uploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly, taskReady) {
+
 		var that = this;
 		remotePath = fixPath(remotePath);
 		if (file.size > MAX_UNSLICE_FILE_SIZE) {
-			that.sliceUploadFile.apply(that, arguments);
+			that.sliceUploadFile(success, error, onprogress, bucketName, remotePath, file, insertOnly, undefined, undefined, taskReady);
 			return;
 		}
+
+        // 辅助 cancelTask
+        var taskId = guid();
+        var $xhr;
+        var globalTask = {
+            id: taskId,
+            cancel: function () {
+                $xhr && $xhr.abort();
+            }
+        };
+        this.tasks[taskId] = globalTask;
+        taskReady && typeof taskReady === 'function' && taskReady(taskId);
+
 		that.getAppSign(function (sign) {
 			var url = that.getCgiUrl(remotePath, sign);
 			var formData = new FormData();
@@ -341,7 +356,7 @@
 			if (insertOnly >= 0) {//insertOnly==0 表示允许覆盖文件 1表示不允许 其他值忽略
 				formData.append('insertOnly', insertOnly);
 			}
-			$.ajax({
+			$xhr = $.ajax({
 				type: 'POST',
 				url: url,
 				data: formData,
@@ -352,8 +367,8 @@
 					var xhr = $.ajaxSettings.xhr();
 					xhr.upload.onprogress = function (evt) {
 						var percent = evt.loaded / evt.total;
-						if (typeof onprogress == 'function') {
-							onprogress(percent);
+						if (typeof onprogress === 'function') {
+							onprogress(percent, 0);
 						}
 					};
 
@@ -366,12 +381,26 @@
 		});
 	};
 
-	CosCloud.prototype.sliceUploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly, optSliceSize, bizAttr) {
+	CosCloud.prototype.sliceUploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly, optSliceSize, bizAttr, taskReady) {
+
+        // 辅助 cancelTask
+        var taskId = guid();
+        var globalTask = {
+            id: taskId,
+            cancelRequests: null,
+            cancel: function () {
+                globalTask.cancelRequests && globalTask.cancelRequests();
+            },
+        };
+        this.tasks[taskId] = globalTask;
+        taskReady && typeof taskReady === 'function' && taskReady(taskId);
 
 		var that = this;
 		remotePath = fixPath(remotePath);
 		that.getAppSign(function (sign) {
 			var opt = {};
+            opt.globalTask = globalTask;
+            if (opt.globalTask.state === 'cancel') return;
 			optSliceSize = that.getSliceSize(optSliceSize);
 			opt.bucket = bucketName;
 			opt.path = remotePath;
@@ -388,6 +417,8 @@
 
 			//先查看是否有上传过分片
 			sliceList.call(that, opt).always(function (res) {
+                if (opt.globalTask.state === 'cancel') return;
+
 				res = res || {};
 				var data = res.data;
 				if (data && data.session) {//之前上传过，直接开始上传剩下的分片
@@ -406,6 +437,7 @@
                         opt.onlineSha = data.sha.split('_')[0];
 					}
 					getSliceSHA1.call(that, opt).done(function (uploadparts) {
+                        if (opt.globalTask.state === 'cancel') return;
 
 						opt.uploadparts = uploadparts;
 						var len = uploadparts.length;
@@ -427,24 +459,26 @@
 
 				} else if (data && data.access_url) {//之前已经上传完成
 					if (typeof opt.onprogress === 'function') {
-						opt.onprogress(1);
+						opt.onprogress(1, 0);
 					}
 					success(res);
 				} else {//之前没上传，进行sliceInit开启上传
 					getSliceSHA1.call(that, opt).done(function (uploadparts) {
+                        if (opt.globalTask.state === 'cancel') return;
 
 						opt.uploadparts = uploadparts;
 						var len = uploadparts.length;
 						opt.sha = uploadparts[len - 1].datasha;
 
 						sliceInit.call(that, opt).done(function (res) {
+                            if (opt.globalTask.state === 'cancel') return;
 
 							res = res || {};
 							var data = res.data || {};
 
 							if (data && data.access_url) { // 之前已经上传完成
 								if (typeof opt.onprogress === 'function') {
-									opt.onprogress(1);
+									opt.onprogress(1, 0);
 								}
 								success(res);
 							} else {
@@ -477,6 +511,25 @@
 		});
 
 	};
+
+	CosCloud.prototype.cancelTask = function (taskId) {
+		var task = this.tasks[taskId];
+		if (task) {
+            task.state = 'cancel';
+        	task.cancel();
+		}
+	};
+
+	// 获取唯一 id
+    function guid() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    }
 
 	//处理路径
 	function fixPath(path, type) {
@@ -558,6 +611,7 @@
 
 		//为了避免内存可能过大，尝试分块读取文件并计算
 		reader.onload = function (e) {
+            if (opt.globalTask.state === 'cancel') return;
 			if (!file || file.length < 1) return;
 
 			// 计算当次分块的 sha1 值
@@ -620,6 +674,7 @@
 			url: url,
 			data: formData,
 			success: function (res) {
+                if (opt.globalTask.state === 'cancel') return;
 				res = res || {};
 				if (res.code == 0) {
 
@@ -679,6 +734,7 @@
         var offsetStart = chunk.start;
         var offsetEnd = Math.min(offsetStart + slice_size, totalSize);
         var blob = that.slice.call(file, offsetStart, offsetEnd);
+        var chunkSize = blob.size;
 
         var removeXhr = function (xhr) {
             for (var i = task.uploadingAjax.length - 1; i >= 0; i--) {
@@ -687,6 +743,12 @@
                 }
             }
         };
+        var preLoaded = 0;
+        var updateProgress = function (loaded, immediately) {
+            task.loadedSize += loaded - preLoaded;
+            preLoaded = loaded;
+			task.onTaskProgress && task.onTaskProgress(immediately);
+		};
         var uploadChunk = function (cb) {
             formData.append('sliceSize', slice_size);
             formData.append('op', 'upload_slice_data');
@@ -707,12 +769,13 @@
                     xhr: function () {
                         var xhr = $.ajaxSettings.xhr();
                         xhr.upload.onprogress = function (evt) {
-                            chunk.loaded = evt.loaded;
+                            updateProgress(evt.loaded);
                             task.onTaskProgress && task.onTaskProgress();
                         };
                         return xhr;
                     },
                     success: function (res) {
+                        updateProgress(chunkSize, true);
                         res = res || {};
                         if (res.code === 0) {
                             cb(null, res);
@@ -721,6 +784,7 @@
                         }
                     },
                     error: function () {
+                        updateProgress(0, true);
                         cb('error');
                     },
                     complete: function () {
@@ -735,6 +799,7 @@
 
         // 失败重试 3 次
         var tryUpload = function (times) {
+            if (opt.globalTask.state === 'cancel') return;
             uploadChunk(function (err, data) {
                 if (err) { // fail, retry
                     if (times >= that.uploadMaxRetryTimes || task.uploadError) {
@@ -773,12 +838,7 @@
             onTaskProgress: function (immediately) {
             	var progress = function () {
                     progressTimer = 0;
-                    var loaded = 0;
-                    for (var i = 0; i < task.chunks.length; i++) {
-                        var chunk = task.chunks[i];
-                        loaded += chunk.loaded;
-                    }
-                    opt.onprogress && opt.onprogress(loaded / file.size, 1);
+                    opt.onprogress && opt.onprogress(task.loadedSize / file.size, 1);
                 };
             	if (immediately) {
             		clearTimeout(progressTimer);
@@ -792,20 +852,26 @@
 
         // 整理所有分片数据
 		(function (){
-            var i, offset, partMap = {};
+            var i, partMap = {};
             if (opt.listparts) {
                 for (i = 0; i < opt.listparts.length; i++) {
                     partMap[opt.listparts[i].offset] = opt.listparts[i];
                 }
 			}
             for (i = 0; i < task.chunkCount; i++) {
-            	offset = i * opt.slice_size;
+            	var start = i * opt.slice_size;
+            	var end = Math.min(start + opt.slice_size, file.size);
             	var chunk = {
-                    start: offset,
-                    end: Math.min(offset + opt.slice_size, file.size)
+                    start: start,
+                    end: end,
+					size: end - start
                 };
-                chunk.state = partMap[offset] ? 'online' : 'waiting';
-                chunk.loaded = partMap[offset] ? chunk.end - chunk.start : 0;
+            	if (partMap[start]) {
+            		task.loadedSize += chunk.size;
+                    chunk.state = 'online';
+				} else {
+                    chunk.state = 'waiting';
+                }
                 task.chunks.push(chunk);
             }
 		})();
@@ -827,8 +893,16 @@
             defer.reject(res);
         };
 
+        opt.globalTask.cancelRequests = function () {
+            for (var i = task.uploadingAjax.length - 1; i >= 0; i--) {
+                var ajax = task.uploadingAjax[i];
+                ajax && ajax.abort();
+            }
+		};
+
         // 开始上传并发上传，同一个上传实例里共用线程数限制
 		var uploadNextChunk = function () {
+            if (opt.globalTask.state === 'cancel') return;
             for (; that._uploadingThreadCount < that.uploadMaxThread && task.currentIndex < task.chunkCount; task.currentIndex++) {
 				var chunk = task.chunks[task.currentIndex];
 				if (chunk.state !== 'waiting') continue;

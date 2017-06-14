@@ -16,14 +16,14 @@
 
             //TODO 以下几个值请确保填上再调用示例里的sdk方法
             //具体可以到https://console.qcloud.com/cos 进行查看
-            var bucket = '';
-            var appid = '';
-            var sid = '';
-            var skey = '';
-            var region = '';
+            var bucket = 'test';
+            var appid = '1250000000';
+            var sid = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+            var skey = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+            var region = 'gz';
             //TODO 以上几个值请确保填上再调用示例里的sdk方法
 
-            var myFolder = '/111/';//需要操作的目录
+            var myFolder = '/';//需要操作的目录
 
             //初始化逻辑
             //特别注意: JS-SDK使用之前请先到console.qcloud.com/cos 对相应的Bucket进行跨域设置
@@ -107,12 +107,16 @@
                 $("#result").val(msg);
             };
 
+            var lastTaskId;
+            var taskReady = function (taskId) {
+                lastTaskId = taskId;
+            };
+
             //上传文件,适合小于20M的文件上传
             $('#uploadFile').on('click', function () {
-
                 $('#js-file').off('change').on('change', function (e) {
                     var file = e.target.files[0];
-                    cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0);//insertOnly==0 表示允许覆盖文件 1表示不允许
+                    cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
                     $('#form')[0].reset();
                     return false;
                 });
@@ -126,13 +130,14 @@
 
 
             //分片上传文件,当选择大于20M大小的文件的时候用分片上传
+            var taskId = 0;
             $('#sliceUploadFile').on('click', function () {
 
 
                 $('#js-file').off('change').on('change', function (e) {
                     var file = e.target.files[0];
                     //分片上传直接调用uploadFile方法，内部会判断是否需要分片
-                    cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0);//insertOnly==0 表示允许覆盖文件 1表示不允许
+                    taskId = cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
 
                     //分片上传也可以直接调用sliceUploadFile方法，分片大小设置暂定不超过1M
                     //cos.sliceUploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, 1024*1024);
@@ -221,6 +226,10 @@
                 cos.moveFile(successCallBack, errorCallBack, bucket, myFile, newFile, overWrite);
             });
 
+            $('#cancelTask').on('click', function () {
+                cos.cancelTask(lastTaskId);
+            });
+
         });
     </script>
 </head>
@@ -252,6 +261,7 @@
         <div class="col-md-2"><a id="moveFile" href="javascript:void(0);" class="btn btn-lg btn-outline">moveFile</a></div>
         <div class="col-md-2"><a id="uploadFile" href="javascript:void(0);" class="btn btn-lg btn-outline">uploadFile</a></div>
         <div class="col-md-2"><a id="sliceUploadFile" href="javascript:void(0);" class="btn btn-lg btn-outline">sliceUploadFile</a></div>
+        <div class="col-md-2"><a id="cancelTask" href="javascript:void(0);" class="btn btn-lg btn-outline">cancelTask</a></div>
     </div>
     <div class="row" style="padding:20px;">
         <textarea id="result" rows="20" cols="100">1.使用js-sdk前请记得到console.qcloud.com/cos 找到对应的bucket进行跨域设置;
