@@ -5,7 +5,7 @@
 }(this, function () {
 	'use strict';
 
-	var $ = window.jQuery.noConflict(true);
+	// var $ = jQuery.noConflict(true);
 
 	function CosCloud(opt) {
 		this.appid = opt.appid;
@@ -1066,8 +1066,6 @@
         readFun.call(this, fileData);
 	}
 
-
 	return CosCloud;
-
 
 }));

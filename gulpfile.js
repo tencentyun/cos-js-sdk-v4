@@ -13,7 +13,8 @@ gulp.task('build', function () {
     gulp.src(['./src/*.js'])
         .pipe(uglify({}))
         .pipe(plugins.concat('cos-js-sdk-v4.js'))
-        .pipe(plugins.header('/* <%=name%> <%=version%> */\n', {name: pkg.name, version: pkg.version, date: (new Date).toLocaleString()}))
+        .pipe(plugins.header('/* <%=name%> <%=version%> */\n;(function(){', {name: pkg.name, version: pkg.version, date: (new Date).toLocaleString()}))
+        .pipe(plugins.footer('})();'))
         .pipe(gulp.dest('./dist').on('finish', function () {
             console.log('concat done...');
         }));
