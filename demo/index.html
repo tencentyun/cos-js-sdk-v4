@@ -116,6 +116,7 @@
             $('#uploadFile').on('click', function () {
                 $('#js-file').off('change').on('change', function (e) {
                     var file = e.target.files[0];
+                    // 分片上传过程可能会有 op=upload_slice_list 的 POST 请求返回 404，不会影响上传：https://github.com/tencentyun/cos-js-sdk-v4/issues/16
                     cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
                     $('#form')[0].reset();
                     return false;
@@ -136,7 +137,8 @@
 
                 $('#js-file').off('change').on('change', function (e) {
                     var file = e.target.files[0];
-                    //分片上传直接调用uploadFile方法，内部会判断是否需要分片
+                    // 分片上传直接调用uploadFile方法，内部会判断是否需要分片
+                    // 分片上传过程可能会有 op=upload_slice_list 的 POST 请求返回 404，不会影响上传：https://github.com/tencentyun/cos-js-sdk-v4/issues/16
                     taskId = cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
 
                     //分片上传也可以直接调用sliceUploadFile方法，分片大小设置暂定不超过1M
