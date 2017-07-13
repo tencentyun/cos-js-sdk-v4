@@ -47,7 +47,7 @@
 	//3M
 	var SLICE_SIZE_3M = 1024 * 1024 * 3;
 	//20M 大于20M的文件需要进行分片传输
-	var MAX_UNSLICE_FILE_SIZE = 1024 * 1024 * 1;
+	var MAX_UNSLICE_FILE_SIZE = 1024 * 1024 * 20;
 
 	CosCloud.prototype.cosapi_cgi_url = "//REGION.file.myqcloud.com/files/v2/";
 	CosCloud.prototype.slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
