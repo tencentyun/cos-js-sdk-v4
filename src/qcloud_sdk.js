@@ -39,15 +39,15 @@
     }
 
 	//512K
-	var SLICE_SIZE_512K = 524288;
+	var SLICE_SIZE_512K = 1024 * 512;
 	//1M
-	var SLICE_SIZE_1M = 1048576;
+	var SLICE_SIZE_1M = 1024 * 1024;
 	//2M
-	var SLICE_SIZE_2M = 2097152;
+	var SLICE_SIZE_2M = 1024 * 1024 * 2;
 	//3M
-	var SLICE_SIZE_3M = 3145728;
+	var SLICE_SIZE_3M = 1024 * 1024 * 3;
 	//20M 大于20M的文件需要进行分片传输
-	var MAX_UNSLICE_FILE_SIZE = 20971520;
+	var MAX_UNSLICE_FILE_SIZE = 1024 * 1024 * 1;
 
 	CosCloud.prototype.cosapi_cgi_url = "//REGION.file.myqcloud.com/files/v2/";
 	CosCloud.prototype.slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
