@@ -1,0 +1,23 @@
+{
+  "name": "cos-js-sdk-v4",
+  "description": "js-sdk-v4 for 腾讯云对象存储服务",
+  "main": "dist/cos-js-sdk-v4.js",
+  "authors": [
+    "carsonxu <459452372@qq.com>"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "qcloud",
+    "qcloud-sdk",
+    "cos",
+    "cos-sdk"
+  ],
+  "homepage": "https://github.com/tencentyun/cos-js-sdk-v4",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
