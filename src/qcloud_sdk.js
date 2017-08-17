@@ -330,11 +330,11 @@
     CosCloud.prototype.uploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly, taskReady) {
 
         var that = this;
-        remotePath = fixPath(remotePath);
         if (file.size > MAX_UNSLICE_FILE_SIZE) {
             that.sliceUploadFile(success, error, onprogress, bucketName, remotePath, file, insertOnly, undefined, undefined, taskReady);
             return;
         }
+        remotePath = fixPath(remotePath);
 
         // 辅助 cancelTask
         var taskId = guid();
