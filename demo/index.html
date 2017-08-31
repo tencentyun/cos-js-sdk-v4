@@ -48,7 +48,7 @@
                     var self = this;
                     var random = parseInt(Math.random() * Math.pow(2, 32));
                     var now = parseInt(new Date().getTime() / 1000);
-                    var e = now + 60; //签名过期时间为当前+60s
+                    var e = now + 600; //签名过期时间为当前+600s
                     var path = '';//多次签名这里填空
                     var str = 'a=' + self.appid + '&k=' + sid + '&e=' + e + '&t=' + now + '&r=' + random +
                             '&f=' + path + '&b=' + self.bucket;
