@@ -143,11 +143,10 @@ $('#js-file').off('change').on('change', function (e) {
 
 ```js
 
-	$('#createFolder').on('click', function () {
-		var newFolder = '/333/';//填你需要创建的文件夹，记得用斜杠包一下
-		cos.createFolder(successCallBack, errorCallBack, bucket, newFolder);
-	});
-
+$('#createFolder').on('click', function () {
+    var newFolder = '/333/';//填你需要创建的文件夹，记得用斜杠包一下
+    cos.createFolder(successCallBack, errorCallBack, bucket, newFolder);
+});
 
 ```
 
