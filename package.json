@@ -1,6 +1,6 @@
 {
   "name": "cos-js-sdk-v4",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "js-sdk-v4 for 腾讯云对象存储服务",
   "main": "dist/cos-js-sdk-v4.js",
   "scripts": {
