@@ -341,6 +341,7 @@
         var $xhr;
         var globalTask = {
             id: taskId,
+            state: 'uploading',
             cancel: function () {
                 $xhr && $xhr.abort();
             }
@@ -353,7 +354,7 @@
             var formData = new FormData();
             formData.append('op', 'upload');
             formData.append('fileContent', file);
-            if (insertOnly >= 0) {//insertOnly==0 表示允许覆盖文件 1表示不允许 其他值忽略
+            if (insertOnly === 0) { // insertOnly === 0 表示覆盖文件，否则不覆盖
                 formData.append('insertOnly', insertOnly);
             }
             $xhr = $.ajax({
@@ -375,8 +376,14 @@
                     return xhr;
 
                 },
-                success: success,
-                error: error
+                success: function () {
+                    if (globalTask.state === 'cancel') return;
+                    success.apply(this, arguments);
+                },
+                error: function () {
+                    if (globalTask.state === 'cancel') return;
+                    success.apply(this, arguments);
+                }
             });
         });
     };
@@ -387,6 +394,7 @@
         var taskId = guid();
         var globalTask = {
             id: taskId,
+            state: 'uploading',
             cancelRequests: null,
             cancel: function () {
                 globalTask.cancelRequests && globalTask.cancelRequests();
@@ -405,7 +413,7 @@
             opt.bucket = bucketName;
             opt.path = remotePath;
             opt.file = file;
-            opt.insertOnly = insertOnly;
+            opt.insertOnly = insertOnly === undefined ? 1 : insertOnly;
             opt.sliceSize = optSliceSize || 1024 * 1024;//分片不设置的话固定1M大小
             opt.appid = that.appid;
             opt.sign = sign;
@@ -421,7 +429,7 @@
 
                 res = res || {};
                 var data = res.data;
-                if (data && data.session) {//之前上传过，直接开始上传剩下的分片
+                if (data && data.session) { // 之前上传过，直接开始上传剩下的分片
                     if (data.filesize !== opt.file.size) {
                         return error({code: -1, message: 'filesize not match'});
                     }
@@ -457,12 +465,16 @@
                         error({code: -1, message: errMsg || 'get slice sha1 error'});
                     });
 
-                } else if (data && data.access_url) {//之前已经上传完成
+                    if (insertOnly === 0) {
+                        formData.append('insertOnly', insertOnly);
+                    }
+                } else if (data && data.access_url && insertOnly !== 0) { // 已存在文件，并且不允许覆盖
+                    // insertOnly === 0 表示覆盖文件，否则不覆盖
                     if (typeof opt.onprogress === 'function') {
                         opt.onprogress(1, 0);
                     }
                     success(res);
-                } else {//之前没上传，进行sliceInit开启上传
+                } else { // 之前没上传，进行sliceInit开启上传
                     getSliceSHA1.call(that, opt).done(function (uploadparts) {
                         if (opt.globalTask.state === 'cancel') return;
 
