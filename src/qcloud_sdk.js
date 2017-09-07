@@ -353,11 +353,10 @@
         that.getAppSign(function (sign) {
             var url = that.getCgiUrl(remotePath, sign);
             var formData = new FormData();
+            insertOnly = insertOnly === 0 ? 0 : 1;
             formData.append('op', 'upload');
             formData.append('fileContent', file);
-            if (insertOnly === 0) { // insertOnly === 0 表示覆盖文件，否则不覆盖
-                formData.append('insertOnly', insertOnly);
-            }
+            formData.append('insertOnly', insertOnly);
             $xhr = $.ajax({
                 type: 'POST',
                 url: url,
@@ -414,7 +413,7 @@
             opt.bucket = bucketName;
             opt.path = remotePath;
             opt.file = file;
-            opt.insertOnly = insertOnly === undefined ? 1 : insertOnly;
+            opt.insertOnly = insertOnly === 0 ? 0 : 1;
             opt.sliceSize = optSliceSize || 1024 * 1024;//分片不设置的话固定1M大小
             opt.appid = that.appid;
             opt.sign = sign;
@@ -976,7 +975,7 @@
                         if (len) {
                             var lastPart = opt.listparts[len - 1];
                             var last_offset = lastPart.offset;
-                            if (last_offset + opt.slice_size >= file.size) {
+                            if (last_offset + lastPart.datalen > file.size) {
                                 defer.resolve();
                                 return defer.promise();
                             }
