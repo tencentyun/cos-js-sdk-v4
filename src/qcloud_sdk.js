@@ -336,7 +336,7 @@
             return;
         }
 
-        if (remotePath.substr(remotePath.length - 1)) {
+        if (remotePath.substr(remotePath.length - 1) === '/') {
             error({code: -1, message: 'path not allow end with "/"'});
             return;
         }
@@ -395,7 +395,7 @@
 
     CosCloud.prototype.sliceUploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly, optSliceSize, bizAttr, taskReady) {
 
-        if (remotePath.substr(remotePath.length - 1)) {
+        if (remotePath.substr(remotePath.length - 1) === '/') {
             error({code: -1, message: 'path not allow end with "/"'});
             return;
         }
