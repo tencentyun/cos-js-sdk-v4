@@ -335,6 +335,11 @@
             that.sliceUploadFile(success, error, onprogress, bucketName, remotePath, file, insertOnly, undefined, undefined, taskReady);
             return;
         }
+
+        if (remotePath.substr(remotePath.length - 1)) {
+            error({code: -1, message: 'path not allow end with "/"'});
+            return;
+        }
         remotePath = fixPath(remotePath);
 
         // 辅助 cancelTask
@@ -389,6 +394,11 @@
     };
 
     CosCloud.prototype.sliceUploadFile = function (success, error, onprogress, bucketName, remotePath, file, insertOnly, optSliceSize, bizAttr, taskReady) {
+
+        if (remotePath.substr(remotePath.length - 1)) {
+            error({code: -1, message: 'path not allow end with "/"'});
+            return;
+        }
 
         // 辅助 cancelTask
         var taskId = guid();
@@ -550,7 +560,7 @@
             return '';
         }
         var self = this;
-        path = path.replace(/(^\/*)|(\/*$)/g, '');
+        path = path.replace(/(^\/*)/g, '');
         if (type == 'folder') {
             path = encodeURIComponent(path + '/').replace(/%2F/g, '/');
         } else {
