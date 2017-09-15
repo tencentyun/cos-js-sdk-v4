@@ -11,6 +11,7 @@ gulp.task('dev', ['build'], function () {
 
 gulp.task('build', function () {
     gulp.src(['./src/*.js'])
+        .pipe(plugins.replace("__VERSION__", pkg.version))
         .pipe(uglify({}))
         .pipe(plugins.concat('cos-js-sdk-v4.js'))
         .pipe(plugins.header('/* <%=name%> <%=version%> */\n;(function(){', {name: pkg.name, version: pkg.version, date: (new Date).toLocaleString()}))
