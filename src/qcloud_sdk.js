@@ -605,7 +605,7 @@
     function getSliceSHA1(opt) {
         var defer = $.Deferred();
 
-        var sha1Algo = new window.jsSHA('SHA-1', 'BYTES');
+        var sha1Algo = new jsSHA('SHA-1', 'BYTES');
         var read = 0;
         var unit = opt.sliceSize;
         var reader = new FileReader();
