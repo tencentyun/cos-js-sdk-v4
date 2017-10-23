@@ -1,14 +1,14 @@
 # cos-js-sdk-v4
 
-腾讯云 COS JS SDK（[JSON API](https://www.qcloud.com/document/product/436/6052)）
+腾讯云 COS JS SDK（[JSON API](https://cloud.tencent.com/document/product/436/6052)）
 
 [releases](https://github.com/tencentyun/cos-js-sdk-v4/releases)
 
 ## 前期准备
 
 1. 使用SDK需要浏览器支持HTML 5<br>
-2. 请您到https://console.qcloud.com/cos 获取您的项目ID(appid)，bucket，secret_id和secret_key。
-3. 请您到https://console.qcloud.com/cos 针对您要操作的bucket进行跨域（CORS）设置，可以按照如下范例，修改来源 Origin：
+2. 请您到https://console.cloud.tencent.com/cos 获取您的项目ID(appid)，bucket，secret_id和secret_key。
+3. 请您到https://console.cloud.tencent.com/cos 针对您要操作的bucket进行跨域（CORS）设置，可以按照如下范例，修改来源 Origin：
 
     ![./cors.png](./cors.png)
 
@@ -32,7 +32,7 @@
 3. v3分了普通上传和分片上传接口，v4上传直接调用一个接口即可，大文件会自动调用分片逻辑（当然也可以手动调用分片上传）
 4. v4新增了进度回调onprogress
 5. v4进行了模块化封装，可以自行用gulp构建
-6. 如何确定自己应该是用v4的sdk还是v3的？ 登陆https://console.qcloud.com/cos 如果左上角提示是云对象存储v4则说明要用v4的sdk否则就是v3的
+6. 如何确定自己应该是用v4的sdk还是v3的？ 登陆https://console.cloud.tencent.com/cos 如果左上角提示是云对象存储v4则说明要用v4的sdk否则就是v3的
 
 ### 可以通过 npm 引入打包依赖
 
@@ -46,7 +46,7 @@ npm i cos-js-sdk-v4 --save-dev
 
 ```js
 //初始化逻辑
-//特别注意: JS-SDK使用之前请先到console.qcloud.com/cos 对相应的Bucket进行跨域设置
+//特别注意: JS-SDK使用之前请先到 console.cloud.tencent.com/cos 对相应的Bucket进行跨域设置
 var cos = new CosCloud({
     appid: appid,// APPID 必填参数
     bucket: bucket,//bucketName 必填参数
