@@ -474,10 +474,6 @@
                     }).fail(function (errMsg) {
                         error({code: -1, message: errMsg || 'get slice sha1 error'});
                     });
-
-                    if (insertOnly === 0) {
-                        formData.append('insertOnly', insertOnly);
-                    }
                 } else if (data && data.access_url && insertOnly !== 0) { // 已存在文件，并且不允许覆盖
                     // insertOnly === 0 表示覆盖文件，否则不覆盖
                     if (typeof opt.onprogress === 'function') {
@@ -947,6 +943,9 @@
                         }
                     });
                 })(chunk);
+            }
+            if (task.uploadingCount === 0 && task.currentIndex === task.chunks.length) { // 全部不需要上传
+                uploadSuccess();
             }
         };
         uploadNextChunk();
