@@ -4,6 +4,8 @@
 
 [releases](https://github.com/tencentyun/cos-js-sdk-v4/releases)
 
+[详细文档](https://cloud.tencent.com/document/product/436/8095)
+
 ## 前期准备
 
 1. 使用SDK需要浏览器支持HTML 5<br>
