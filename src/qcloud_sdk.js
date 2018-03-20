@@ -819,7 +819,7 @@
             if (opt.globalTask.state === 'cancel') return;
             uploadChunk(function (err, data) {
                 if (err) { // fail, retry
-                    if (times >= that.uploadMaxRetryTimes || task.uploadError) {
+                    if (times >= that.uploadMaxRetryTimes || task.uploadError || opt.globalTask.state === 'cancel') {
                         callback(err, data);
                     } else {
                         tryUpload(times + 1);
