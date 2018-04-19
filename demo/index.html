@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>QCloud COS SDK V4</title>
+    <title>cos-js-sdk-v4</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
@@ -34,7 +34,7 @@
                 getAppSign: function (callback) {//获取签名 必填参数
 
                     // 方法一（推荐线上使用）：搭建鉴权服务器，构造请求参数获取签名，推荐实际线上业务使用，优点是安全性好，不会暴露自己的私钥
-                    // $.get('../server/auth.php', callback);
+                    // $.get('../../cos-php-sdk-v4/auth.php', {pathname: self.path}, callback);
 
                     // 方法二（前端调试使用）：直接在浏览器前端计算签名，需要获取自己的accessKey和secretKey, 一般在调试阶段使用
                     var self = this;
@@ -54,7 +54,7 @@
                 getAppSignOnce: function (callback) {//单次签名，参考上面的注释即可
 
                     // 方法一（推荐线上使用）：搭建鉴权服务器，构造请求参数获取签名，推荐实际线上业务使用，优点是安全性好，不会暴露自己的私钥
-                    // $.get('../server/auth.php', {path: self.path}, callback);
+                    // $.get('../../cos-php-sdk-v4/auth.php', {pathname: self.path}, callback);
 
                     // 方法二（前端调试使用）：直接在浏览器前端计算签名，需要获取自己的accessKey和secretKey, 一般在调试阶段使用
                     var self = this;
