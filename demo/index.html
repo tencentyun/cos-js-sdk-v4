@@ -23,7 +23,7 @@
             var region = 'gz';
             //TODO 以上几个值请确保填上再调用示例里的sdk方法
 
-            var myFolder = '/';//需要操作的目录
+            var myFolder = '/333';//需要操作的目录
 
             //初始化逻辑
             //特别注意: JS-SDK使用之前请先到console.qcloud.com/cos 对相应的Bucket进行跨域设置
@@ -102,7 +102,7 @@
                 $('#js-file').off('change').on('change', function (e) {
                     var file = e.target.files[0];
                     // 分片上传过程可能会有 op=upload_slice_list 的 POST 请求返回 404，不会影响上传：https://github.com/tencentyun/cos-js-sdk-v4/issues/16
-                    cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
+                    cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + '/' + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
                     $('#form')[0].reset();
                     return false;
                 });
@@ -124,10 +124,10 @@
                     var file = e.target.files[0];
                     // 分片上传直接调用uploadFile方法，内部会判断是否需要分片
                     // 分片上传过程可能会有 op=upload_slice_list 的 POST 请求返回 404，不会影响上传：https://github.com/tencentyun/cos-js-sdk-v4/issues/16
-                    taskId = cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
+                    taskId = cos.uploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + '/' + file.name, file, 0, taskReady);//insertOnly==0 表示允许覆盖文件 1表示不允许
 
                     //分片上传也可以直接调用sliceUploadFile方法，分片大小设置暂定不超过1M
-                    //cos.sliceUploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + file.name, file, 0, 1024*1024);
+                    //cos.sliceUploadFile(successCallBack, errorCallBack, progressCallBack, bucket, myFolder + '/' + file.name, file, 0, 1024*1024);
 
                     $('#form')[0].reset();
                     return false;
@@ -140,17 +140,14 @@
                 return false;
             });
 
-
             //创建文件夹
             $('#createFolder').on('click', function () {
-                var newFolder = '/333/';//填你需要创建的文件夹，记得用斜杠包一下
-                cos.createFolder(successCallBack, errorCallBack, bucket, newFolder);
+                cos.createFolder(successCallBack, errorCallBack, bucket, myFolder);
             });
 
             //删除文件夹
             $('#deleteFolder').on('click', function () {
-                var newFolder = '/333/';//填你需要删除的文件夹，记得用斜杠包一下
-                cos.deleteFolder(successCallBack, errorCallBack, bucket, newFolder);
+                cos.deleteFolder(successCallBack, errorCallBack, bucket, myFolder);
             });
 
             //获取指定文件夹内的列表,默认每次返回20条
@@ -160,37 +157,37 @@
 
             //获取文件夹属性
             $('#getFolderStat').on('click', function () {
-                cos.getFolderStat(successCallBack, errorCallBack, bucket, '/333/');
+                cos.getFolderStat(successCallBack, errorCallBack, bucket, myFolder);
             });
 
             //更新文件夹属性
             $('#updateFolder').on('click', function () {
-                cos.updateFolder(successCallBack, errorCallBack, bucket, '/333/', 'authority');
+                cos.updateFolder(successCallBack, errorCallBack, bucket, myFolder, 'authority');
             });
 
 
             //删除文件
             $('#deleteFile').on('click', function () {
-                var myFile = myFolder + '2.txt';//填你自己实际存在的文件
+                var myFile = myFolder + '/2.txt';//填你自己实际存在的文件
                 cos.deleteFile(successCallBack, errorCallBack, bucket, myFile);
             });
 
             //获取文件属性
             $('#getFileStat').on('click', function () {
-                var myFile = myFolder + '2.txt';//填你自己实际存在的文件
+                var myFile = myFolder + '/2.txt';//填你自己实际存在的文件
                 cos.getFileStat(successCallBack, errorCallBack, bucket, myFile);
             });
 
             //更新文件属性
             $('#updateFile').on('click', function () {
-                var myFile = myFolder + '2.txt';//填你自己实际存在的文件
+                var myFile = myFolder + '/2.txt';//填你自己实际存在的文件
                 cos.updateFile(successCallBack, errorCallBack, bucket, myFile, 'my new file attr');
             });
 
             //拷贝文件，从源文件地址复制一份到新地址
             $('#copyFile').on('click', function () {
 
-                var myFile = '111/2.txt';//填你自己实际存在的文件
+                var myFile = '/111/2.txt';//填你自己实际存在的文件
 
                 //注意一下目标的路径，这里如果填333/2.txt 则表示文件复制到111/333/2.txt
                 //如果填/333/2.txt 则表示文件复制到bucket根目录下的333/2.txt
