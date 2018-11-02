@@ -1,5 +1,8 @@
 # cos-js-sdk-v4
 
+> XML API 功能更丰富，v5 SDK 上传优化比较多，推荐使用 v5 SDK
+> https://github.com/tencentyun/cos-js-sdk-v5
+
 腾讯云 COS JS SDK（[JSON API](https://cloud.tencent.com/document/product/436/6052)）
 
 [releases](https://github.com/tencentyun/cos-js-sdk-v4/releases)
