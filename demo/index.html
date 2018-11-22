@@ -42,6 +42,7 @@
                     var now = parseInt(Date.now() / 1000);
                     var e = now + 600; //签名过期时间为当前+600s
                     var path = ''; //多次签名这里填空
+                    path = encodeURIComponent(path).replace(/%2F/, '/');
                     var str = 'a=' + self.appid + '&k=' + sid + '&e=' + e + '&t=' + now + '&r=' + random + '&f=' + path + '&b=' + self.bucket;
                     var sha1Res = CryptoJS.HmacSHA1(str, skey); // 这里使用CryptoJS计算sha1值，你也可以用其他开源库或自己实现
                     var strWordArray = CryptoJS.enc.Utf8.parse(str);
