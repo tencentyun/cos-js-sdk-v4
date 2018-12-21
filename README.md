@@ -1,7 +1,7 @@
 # cos-js-sdk-v4
 
-> XML API 功能更丰富，v5 SDK 上传优化比较多，推荐使用 v5 SDK
-> https://github.com/tencentyun/cos-js-sdk-v5
+## 已弃用 - 请升级到 cos-js-sdk-v5
+SDK 依赖的 JSON API 已弃用，请直接使用基于 XML API 的 [cos-js-sdk-v5](https://github.com/tencentyun/cos-js-sdk-v5)。
 
 腾讯云 COS JS SDK（[JSON API](https://cloud.tencent.com/document/product/436/6052)）
 
