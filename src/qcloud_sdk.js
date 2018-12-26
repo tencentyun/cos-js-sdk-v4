@@ -5,7 +5,47 @@
 }(this, function () {
     'use strict';
 
-    // var $ = jQuery.noConflict(true);
+    var fileSliceNeedCopy = (function () {
+        var compareVersion = function(a, b) {
+            a = a.split('.');
+            b = b.split('.');
+            for (var i = 0; i < b.length; i++) {
+                if (a[i] !== b[i]) {
+                    return parseInt(a[i]) > parseInt(b[i]) ? 1 : -1;
+                }
+            }
+            return 0;
+        };
+        var check = function (ua) {
+            var ChromeVersion = (ua.match(/Chrome\/([.\d]+)/) || [])[1];
+            var QBCoreVersion = (ua.match(/QBCore\/([.\d]+)/) || [])[1];
+            var QQBrowserVersion = (ua.match(/QQBrowser\/([.\d]+)/) || [])[1];
+            var need = ChromeVersion && compareVersion(ChromeVersion, '53.0.2785.116') < 0
+                && QBCoreVersion && compareVersion(QBCoreVersion, '3.53.991.400') < 0
+                && QQBrowserVersion && compareVersion(QQBrowserVersion, '9.0.2524.400') <= 0 || false;
+            return need;
+        };
+        return check(navigator.userAgent);
+    })();
+    var fileSliceCopy = function (file, start, end, callback) {
+        var blob;
+        if (file.slice) {
+            blob = file.slice(start, end);
+        } else if (file.mozSlice) {
+            blob = file.mozSlice(start, end);
+        } else if (file.webkitSlice) {
+            blob = file.webkitSlice(start, end);
+        }
+        if (fileSliceNeedCopy) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                callback(new Blob([reader.result]));
+            };
+            reader.readAsArrayBuffer(blob);
+        } else {
+            callback(blob);
+        }
+    };
 
     function CosCloud(opt) {
         this.appid = opt.appid;
@@ -829,7 +869,11 @@
                 }
             });
         };
-        tryUpload(1);
+        fileSliceCopy(file, offsetStart, offsetEnd, function (newBlob) {
+            blob = newBlob;
+            chunkSize = blob.size;
+            tryUpload(1);
+        });
 
     };
 
