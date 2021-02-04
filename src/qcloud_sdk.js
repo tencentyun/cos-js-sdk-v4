@@ -171,9 +171,9 @@
         this.updateBase(success, error, bucketName, remotePath, bizAttribute);
     };
 
-    CosCloud.prototype.updateFile = function (success, error, bucketName, remotePath, bizAttribute) {
+    CosCloud.prototype.updateFile = function (success, error, bucketName, remotePath, bizAttribute, authority, customHeaders) {
         remotePath = fixPath.call(this, remotePath);
-        this.updateBase(success, error, bucketName, remotePath, bizAttribute);
+        this.updateBase(success, error, bucketName, remotePath, bizAttribute, authority, customHeaders);
     };
 
     CosCloud.prototype.updateBase = function (success, error, bucketName, remotePath, bizAttribute, authority, customHeaders) {
@@ -195,7 +195,7 @@
 
             if (customHeaders) {
                 customHeaders = JSON.stringify(customHeaders);
-                formData.append('customHeaders', customHeaders);
+                formData.append('custom_headers', customHeaders);
             }
 
             $.ajax({
